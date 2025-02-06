@@ -16,6 +16,14 @@ def is_overlapping(new_shift):
                 return True
     return False
 
+def shift_count(date):
+    return sum(1 for shift in shifts if shift["date"] == date)
+
+def calculate_end_time(start_time):
+    start = datetime.strptime(start_time, "%I:%M %p")
+    end = start + timedelta(hours=8)  # Fixed duration of 8 hours
+    return end.strftime("%I:%M %p")
+
 def main():
     while True:
         print("\nEmployee Shift Scheduler")
