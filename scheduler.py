@@ -134,6 +134,16 @@ def main():
             except ValueError:
                 print("Error: Invalid date or time format. Please use YYYY-MM-DD and HH:MM AM/PM.")
                 continue
+
+            result = schedule_shift(employee_name, date, start_time)
+            print(result)
+        elif choice == "2":
+            view_shifts()
+        elif choice == "3":
+            print("Exiting the scheduler. Goodbye!")
+            return
+        else:
+            print("Invalid choice. Please try again.")
             
 
 if __name__ == "__main__":
