@@ -45,7 +45,7 @@ def schedule_shift(employee_name, date, start_time):
         "start_time": start_time,
         "end_time": end_time,
     }
-    
+
     # Check for overlapping shifts
     if is_overlapping(new_shift):
         return f"Error: Shift overlaps with another shift on {date} from {start_time} to {end_time}."
@@ -60,6 +60,56 @@ def schedule_shift(employee_name, date, start_time):
             return "Shift scheduling canceled."
         else:
             print("Invalid input. Please enter 'Y' to submit or 'N' to cancel.")
+
+def view_shifts():
+    print("========================")
+    print("View Employee Schedule")
+    print("========================")
+    print("1. View schedule for a specific date")
+    print("2. View schedule for multiple dates")
+    print("3. View schedule for a full month")
+    choice = input("Enter your choice: ")
+    
+    if choice == "1":
+        date = input("Enter date (YYYY-MM-DD): ")
+        try:
+            datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            print("Error: Invalid date format. Please use YYYY-MM-DD.")
+            return
+        scheduled_shifts = [shift for shift in shifts if shift["date"] == date]
+    
+    elif choice == "2":
+        start_date = input("Enter start date (YYYY-MM-DD): ")
+        end_date = input("Enter end date (YYYY-MM-DD): ")
+        try:
+            datetime.strptime(start_date, "%Y-%m-%d")
+            datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            print("Error: Invalid date format. Please use YYYY-MM-DD.")
+            return
+        scheduled_shifts = [shift for shift in shifts if start_date <= shift["date"] <= end_date]
+    
+    elif choice == "3":
+        month = input("Enter month (YYYY-MM): ")
+        try:
+            datetime.strptime(month, "%Y-%m")
+        except ValueError:
+            print("Error: Invalid month format. Please use YYYY-MM.")
+            return
+        scheduled_shifts = [shift for shift in shifts if shift["date"].startswith(month)]
+    
+    else:
+        print("Invalid choice. Please try again.")
+        return
+    
+    if not scheduled_shifts:
+        print("No shifts scheduled for the selected period.")
+    else:
+        print("Shifts:")
+        for shift in scheduled_shifts:
+            print(f"- {shift['employee_name']}: {shift['date']} {shift['start_time']} to {shift['end_time']}")
+
 
 def main():
     while True:
