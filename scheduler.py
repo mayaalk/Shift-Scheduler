@@ -45,6 +45,21 @@ def schedule_shift(employee_name, date, start_time):
         "start_time": start_time,
         "end_time": end_time,
     }
+    
+    # Check for overlapping shifts
+    if is_overlapping(new_shift):
+        return f"Error: Shift overlaps with another shift on {date} from {start_time} to {end_time}."
+
+    # Confirm submission
+    while True:
+        confirm = input(f"Confirm shift for {employee_name} on {date} from {start_time} to {end_time}? (Y/N): ").strip().lower()
+        if confirm == "y":
+            shifts.append(new_shift)
+            return f"Shift successfully scheduled for {employee_name} on {date} from {start_time} to {end_time}."
+        elif confirm == "n":
+            return "Shift scheduling canceled."
+        else:
+            print("Invalid input. Please enter 'Y' to submit or 'N' to cancel.")
 
 def main():
     while True:
