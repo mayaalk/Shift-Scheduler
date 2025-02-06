@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 
+# In-memory database for storing shifts
 shifts = []
 
+# Helper function to check for overlapping shifts
 def is_overlapping(new_shift):
     new_start = datetime.strptime(new_shift["start_time"], "%I:%M %p")
     new_end = datetime.strptime(new_shift["end_time"], "%I:%M %p")
@@ -16,14 +18,17 @@ def is_overlapping(new_shift):
                 return True
     return False
 
+# Helper function to check shift count for a given date
 def shift_count(date):
     return sum(1 for shift in shifts if shift["date"] == date)
 
+# Helper function to calculate end time based on start time
 def calculate_end_time(start_time):
     start = datetime.strptime(start_time, "%I:%M %p")
     end = start + timedelta(hours=8)  # Fixed duration of 8 hours
     return end.strftime("%I:%M %p")
 
+# Function to schedule a shift
 def schedule_shift(employee_name, date, start_time):
     # Ensure the maximum of 3 shifts per day
     if shift_count(date) >= 3:
@@ -38,6 +43,7 @@ def schedule_shift(employee_name, date, start_time):
     if len(employee_shifts) >= 5:
         return f"Error: {employee_name} has already worked 5 shifts this week ({week_start.strftime('%Y-%m-%d')} - {week_end.strftime('%Y-%m-%d')}). Please schedule a shift for next week."
     
+    # Calculate end time for the shift
     end_time = calculate_end_time(start_time)
     new_shift = {
         "employee_name": employee_name,
@@ -61,6 +67,7 @@ def schedule_shift(employee_name, date, start_time):
         else:
             print("Invalid input. Please enter 'Y' to submit or 'N' to cancel.")
 
+# Function to view shifts
 def view_shifts():
     print("========================")
     print("View Employee Schedule")
@@ -110,7 +117,7 @@ def view_shifts():
         for shift in scheduled_shifts:
             print(f"- {shift['employee_name']}: {shift['date']} {shift['start_time']} to {shift['end_time']}")
 
-
+# CLI for interacting with the scheduler
 def main():
     while True:
         print("\nEmployee Shift Scheduler")
