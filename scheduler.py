@@ -24,6 +24,28 @@ def calculate_end_time(start_time):
     end = start + timedelta(hours=8)  # Fixed duration of 8 hours
     return end.strftime("%I:%M %p")
 
+def schedule_shift(employee_name, date, start_time):
+    # Ensure the maximum of 3 shifts per day
+    if shift_count(date) >= 3:
+        return f"Error: Maximum shift limit (3 shifts) reached for {date}."
+    
+    # Count shifts for the employee in the given week
+    start_date = datetime.strptime(date, "%Y-%m-%d")
+    week_start = start_date - timedelta(days=start_date.weekday())
+    week_end = week_start + timedelta(days=6)
+    employee_shifts = [shift for shift in shifts if shift["employee_name"] == employee_name and week_start.strftime("%Y-%m-%d") <= shift["date"] <= week_end.strftime("%Y-%m-%d")]
+    
+    if len(employee_shifts) >= 5:
+        return f"Error: {employee_name} has already worked 5 shifts this week ({week_start.strftime('%Y-%m-%d')} - {week_end.strftime('%Y-%m-%d')}). Please schedule a shift for next week."
+    
+    end_time = calculate_end_time(start_time)
+    new_shift = {
+        "employee_name": employee_name,
+        "date": date,
+        "start_time": start_time,
+        "end_time": end_time,
+    }
+
 def main():
     while True:
         print("\nEmployee Shift Scheduler")
