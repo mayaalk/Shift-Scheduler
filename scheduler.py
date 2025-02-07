@@ -67,6 +67,11 @@ def schedule_shift(employee_name, date, start_time):
         else:
             print("Invalid input. Please enter 'Y' to submit or 'N' to cancel.")
 
+# Function for closest shift available in view shifts
+def find_closest_shift(date):
+    sorted_shifts = sorted(shifts, key=lambda s: abs((datetime.strptime(s["date"], "%Y-%m-%d") - datetime.strptime(date, "%Y-%m-%d")).days))
+    return sorted_shifts[0] if sorted_shifts else None
+
 # Function to view shifts
 def view_shifts():
     print("========================")
@@ -112,8 +117,11 @@ def view_shifts():
     
     if not scheduled_shifts:
         print("No shifts scheduled for the selected period.")
+        closest_shift = find_closest_shift(date if choice == "1" else start_date)
+        if closest_shift:
+            print(f"The closest shift is for {closest_shift['employee_name']} on {closest_shift['date']} from {closest_shift['start_time']} to {closest_shift['end_time']}.")
     else:
-        print("Shifts:")
+        print("Scheduled Shifts:")
         for shift in scheduled_shifts:
             print(f"- {shift['employee_name']}: {shift['date']} {shift['start_time']} to {shift['end_time']}")
 
