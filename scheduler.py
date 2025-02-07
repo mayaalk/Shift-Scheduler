@@ -67,11 +67,6 @@ def schedule_shift(employee_name, date, start_time):
         else:
             print("Invalid input. Please enter 'Y' to submit or 'N' to cancel.")
 
-# Function for closest shift available in view shifts
-def find_closest_shift(date):
-    sorted_shifts = sorted(shifts, key=lambda s: abs((datetime.strptime(s["date"], "%Y-%m-%d") - datetime.strptime(date, "%Y-%m-%d")).days))
-    return sorted_shifts[0] if sorted_shifts else None
-
 # Function to view shifts
 def view_shifts():
     print("========================")
@@ -117,9 +112,6 @@ def view_shifts():
     
     if not scheduled_shifts:
         print("No shifts scheduled for the selected period.")
-        closest_shift = find_closest_shift(date if choice == "1" else start_date)
-        if closest_shift:
-            print(f"The closest shift is for {closest_shift['employee_name']} on {closest_shift['date']} from {closest_shift['start_time']} to {closest_shift['end_time']}.")
     else:
         print("Scheduled Shifts:")
         for shift in scheduled_shifts:
@@ -136,22 +128,28 @@ def main():
         choice = input("Enter your choice: ")
 
         if choice == "1":
-            print("========================")
-            print("Schedule a New Shift")
-            print("========================")
-            employee_name = input("Enter employee name: ")
-            date = input("Enter date (YYYY-MM-DD): ")
-            start_time = input("Enter start time (HH:MM AM/PM): ")
-            
-            try:
-                datetime.strptime(date, "%Y-%m-%d")
-                datetime.strptime(start_time, "%I:%M %p")
-            except ValueError:
-                print("Error: Invalid date or time format. Please use YYYY-MM-DD and HH:MM AM/PM.")
-                continue
+            while True:
+                print("========================")
+                print("Schedule a New Shift")
+                print("========================")
+                employee_name = input("Enter employee name: ")
+                date = input("Enter date (YYYY-MM-DD): ")
+                start_time = input("Enter start time (HH:MM AM/PM): ")
+                
+                try:
+                    datetime.strptime(date, "%Y-%m-%d")
+                    datetime.strptime(start_time, "%I:%M %p")
+                except ValueError:
+                    print("Error: Invalid date or time format. Please use YYYY-MM-DD and HH:MM AM/PM.")
+                    continue
 
-            result = schedule_shift(employee_name, date, start_time)
-            print(result)
+                result = schedule_shift(employee_name, date, start_time)
+                print(result)
+
+                # Ask if the user wants to add another shift
+                add_more = input("Do you want to add another shift? (Y/N): ").strip().lower()
+                if add_more != "y":
+                    break
         elif choice == "2":
             view_shifts()
         elif choice == "3":
@@ -160,6 +158,6 @@ def main():
         else:
             print("Invalid choice. Please try again.")
             
-
+            
 if __name__ == "__main__":
     main()
