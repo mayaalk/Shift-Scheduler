@@ -66,6 +66,21 @@ def schedule_shift(employee_name, date, start_time):
             return "Shift scheduling canceled."
         else:
             print("Invalid input. Please enter 'Y' to submit or 'N' to cancel.")
+            
+# Helper function to find the closest available shift
+def find_closest_shift(date):
+    all_dates = sorted(set(shift["date"] for shift in shifts))
+    
+    if not all_dates:
+        return "No shifts available."
+    
+    date_obj = datetime.strptime(date, "%Y-%m-%d")
+    closest_date = min(all_dates, key=lambda d: abs(datetime.strptime(d, "%Y-%m-%d") - date_obj))
+    closest_shifts = [shift for shift in shifts if shift["date"] == closest_date]
+    
+    return f"No shifts found for {date}. Closest available shift(s) on {closest_date}:\n" + "\n".join(
+        [f"- {shift['employee_name']}: {shift['start_time']} to {shift['end_time']}" for shift in closest_shifts]
+    )
 
 # Function to view shifts
 def view_shifts():
@@ -111,16 +126,16 @@ def view_shifts():
         return
     
     if not scheduled_shifts:
-        print("No shifts scheduled for the selected period.")
+        print(find_closest_shift(date))
     else:
         print("Scheduled Shifts:")
         for shift in scheduled_shifts:
-            print(f"- {shift['employee_name']}: {shift['date']} {shift['start_time']} to {shift['end_time']}")
+            print(f"- {shift['employee_name']}: {shift['start_time']} to {shift['end_time']}")
 
 # CLI for interacting with the scheduler
 def main():
     while True:
-        print("\nEmployee Shift Scheduler")
+        print("\nEmployee Shift Scheduler - Simple, Accurate, and Efficient Shift Scheduling at Your Fingertips!")
         print("========================")
         print("1. Schedule a Shift")
         print("2. View Shifts")
@@ -141,7 +156,7 @@ def main():
                     datetime.strptime(start_time, "%I:%M %p")
                 except ValueError:
                     print("Error: Invalid date or time format. Please use YYYY-MM-DD and HH:MM AM/PM.")
-                    continue
+                    break
 
                 result = schedule_shift(employee_name, date, start_time)
                 print(result)
@@ -156,8 +171,7 @@ def main():
             print("Exiting the scheduler. Goodbye!")
             return
         else:
-            print("Invalid choice. Please try again.")
-            
+            print("Invalid choice. Please try again.")            
             
 if __name__ == "__main__":
     main()
