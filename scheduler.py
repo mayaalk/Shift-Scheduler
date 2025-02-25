@@ -1,4 +1,25 @@
 from datetime import datetime, timedelta
+import zmq
+import json
+
+# Function to fetch a tip from the Tip of the Day Microservice
+def get_tip_of_the_day():
+    context = zmq.Context()
+    socket = context.socket(zmq.REQ)  # Create a request socket
+    socket.connect("tcp://localhost:1234")  # Connect to the microservice
+    socket.send_string("get")  # Send the "get" request
+    response = socket.recv_string()  # Receive the response
+    tip_data = json.loads(response)  # Parse the JSON response
+    if "tip" in tip_data:
+        return tip_data["tip"]
+    elif "error" in tip_data:
+        return f"Error fetching tip: {tip_data['error']}"
+    else:
+        return "Unknown error occurred while fetching the tip."
+
+# Display the Tip of the Day at the start of the program
+tip = get_tip_of_the_day()
+print(f"🌟 Tip of the Day: {tip} 🌟\n")
 
 # In-memory database for storing shifts
 shifts = []
