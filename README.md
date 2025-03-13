@@ -1,3 +1,3 @@
-# CS361-Project
+# Shift Scheduler Project
 
-Version 0.0.2
+Version 0.0.3
