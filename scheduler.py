@@ -2,8 +2,7 @@ from datetime import datetime, timedelta
 import zmq
 import json
 import requests
-import requests
-    
+
 #---------------------------------------------------------------------------#
 
 # Function for Microservice A
@@ -59,16 +58,199 @@ def check_employee_availability(employee_name, date, start_time, end_time):
     response = requests.post(url, json=payload)
     return response.json()
 
-# Set availabilities
-def test_microservice_b():
+# New function to get all employee availabilities
+def get_all_availabilities():
+    url = "http://localhost:5001/availability/all"
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"error": f"Error fetching availabilities: {response.text}"}
+    except Exception as e:
+        return {"error": f"Error connecting to availability service: {str(e)}"}
+
+# Function to check who is available for a given time slot
+def check_available_employees(date, start_time, end_time):
+    url = "http://localhost:5001/availability/employees"
+    payload = {
+        "date": date,
+        "start_time": start_time,
+        "end_time": end_time
+    }
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"available_employees": [], "error": f"Error checking availabilities: {response.text}"}
+    except Exception as e:
+        return {"available_employees": [], "error": f"Error connecting to availability service: {str(e)}"}
+
+# New function to check employee availabilities for a whole month
+def check_monthly_availabilities():
+    print("------------------------")
+    print("View Monthly Availabilities")
+    print("------------------------")
+    year_month = input("Enter month (YYYY-MM): ")
     
-    result = set_employee_availability("John", "2025-03-20", format_time("9:00 AM"), format_time("5:00 PM"))
-    print(result)  
-    result = set_employee_availability("Alice", "2025-03-21", format_time("9:00 AM"), format_time("5:00 PM"))
-    print(result)
-    result = set_employee_availability("Casey", "2025-03-22", format_time("9:00 AM"), format_time("5:00 PM"))
-    print(result)
-test_microservice_b()
+    try:
+        datetime.strptime(year_month, "%Y-%m")
+    except ValueError:
+        print("Error: Invalid month format. Please use YYYY-MM.")
+        return
+        
+    # Get all availabilities
+    all_availabilities = get_all_availabilities()
+    
+    if "error" in all_availabilities:
+        print(all_availabilities["error"])
+        return
+    
+    monthly_availabilities = {}
+    availabilities_data = all_availabilities.get("availabilities", {})
+    
+    for employee, slots in availabilities_data.items():
+        employee_monthly_slots = []
+        for slot in slots:
+            if slot["date"].startswith(year_month):
+                employee_monthly_slots.append(slot)
+        
+        if employee_monthly_slots:
+            monthly_availabilities[employee] = employee_monthly_slots
+    
+    if monthly_availabilities:
+        print(f"\nEmployee availabilities for {year_month}:")
+        for employee, slots in monthly_availabilities.items():
+            print(f"\n{employee}:")
+            for i, slot in enumerate(slots, 1):
+                print(f"  {i}. {slot['date']}: {slot['start_time']} to {slot['end_time']}")
+    else:
+        print(f"\nNo employees have availabilities set for {year_month}.")
+    
+    input("\nPress Enter to continue...")
+
+# Function to manage employee availability
+def manage_employee_availability():
+    while True:
+        print("========================")
+        print("Manage Employee Availability")
+        print("========================")
+        print("1. Set Employee Availability")
+        print("2. View Available Employees")
+        print("3. View Monthly Availabilities")
+        print("4. Return to Main Menu")
+        sub_choice = input("Enter your choice: ")
+        
+        if sub_choice == "1":
+            # Set availability
+            while True:
+                print("------------------------")
+                print("Set Employee Availability")
+                print("------------------------")
+                employee_name = input("Enter employee name: ")
+                date = input("Enter date (YYYY-MM-DD): ")
+                start_time = input("Enter start time (HH:MM AM/PM): ")
+                
+                # Auto-calculate end time (8 hours after start time)
+                try:
+                    start_dt = datetime.strptime(start_time, "%I:%M %p")
+                    end_dt = start_dt + timedelta(hours=8)
+                    end_time = end_dt.strftime("%I:%M %p")
+                    print(f"End time automatically set to: {end_time}")
+                except ValueError:
+                    print("Invalid time format. Please use HH:MM AM/PM.")
+                    continue
+                
+                try:
+                    datetime.strptime(date, "%Y-%m-%d")
+                    start_formatted = format_time(start_time)
+                    end_formatted = format_time(end_time)
+                    
+                    if "Invalid time format" in start_formatted or "Invalid time format" in end_formatted:
+                        print(start_formatted if "Invalid" in start_formatted else end_formatted)
+                        continue
+                        
+                    # Check if end time is after start time
+                    start_dt = datetime.strptime(start_formatted, "%I:%M %p")
+                    end_dt = datetime.strptime(end_formatted, "%I:%M %p")
+                    if end_dt <= start_dt:
+                        print("Error: End time must be after start time.")
+                        continue
+                        
+                except ValueError:
+                    print("Error: Invalid date format. Please use YYYY-MM-DD.")
+                    continue
+                    
+                result = set_employee_availability(employee_name, date, start_formatted, end_formatted)
+                print(result)
+                
+                add_more = input("Do you want to add another availability? (Y/N): ").strip().lower()
+                if add_more != "y":
+                    break
+        
+        elif sub_choice == "2":
+            # View available employees
+            print("------------------------")
+            print("View Available Employees")
+            print("------------------------")
+            date = input("Enter date (YYYY-MM-DD): ")
+            start_time = input("Enter start time (HH:MM AM/PM): ")
+            
+            # Auto-calculate end time (8 hours after start time)
+            try:
+                start_dt = datetime.strptime(start_time, "%I:%M %p")
+                end_dt = start_dt + timedelta(hours=8)
+                end_time = end_dt.strftime("%I:%M %p")
+                print(f"End time: {end_time}")
+            except ValueError:
+                print("Invalid time format. Please use HH:MM AM/PM.")
+                continue
+            
+            try:
+                datetime.strptime(date, "%Y-%m-%d")
+                start_formatted = format_time(start_time)
+                end_formatted = format_time(end_time)
+                
+                if "Invalid time format" in start_formatted or "Invalid time format" in end_formatted:
+                    print(start_formatted if "Invalid" in start_formatted else end_formatted)
+                    continue
+                    
+                # Check if end time is after start time
+                start_dt = datetime.strptime(start_formatted, "%I:%M %p")
+                end_dt = datetime.strptime(end_formatted, "%I:%M %p")
+                if end_dt <= start_dt:
+                    print("Error: End time must be after start time.")
+                    continue
+                    
+            except ValueError:
+                print("Error: Invalid date format. Please use YYYY-MM-DD.")
+                continue
+                
+            result = check_available_employees(date, start_formatted, end_formatted)
+            
+            if "error" in result:
+                print(result["error"])
+            else:
+                available_employees = result.get("available_employees", [])
+                if available_employees:
+                    print(f"\nEmployees available on {date} from {start_formatted} to {end_formatted}:")
+                    for i, employee in enumerate(available_employees, 1):
+                        print(f"{i}. {employee}")
+                else:
+                    print(f"\nNo employees available on {date} from {start_formatted} to {end_formatted}.")
+            
+            input("\nPress Enter to continue...")
+        
+        elif sub_choice == "3":
+            check_monthly_availabilities()
+            break
+            
+        elif sub_choice == "4":
+            break
+            
+        else:
+            print("Invalid choice. Please try again.")
 
 #---------------------------------------------------------------------------#
 
@@ -174,6 +356,7 @@ def schedule_shift(employee_name, date, start_time):
     
     # Calculate end time for the shift
     end_time = calculate_end_time(formatted_start)
+    print(f"End time: {end_time}")
     
     # Check employee availability using Microservice B
     availability_response = check_employee_availability(employee_name, date, formatted_start, end_time)
@@ -292,7 +475,7 @@ def view_shifts():
     else:
         print("Scheduled Shifts:")
         for shift in scheduled_shifts:
-            print(f"- {shift['employee_name']}: {shift['start_time']} to {shift['end_time']}")
+            print(f"- {shift['employee_name']}: {shift['date']} - {shift['start_time']} to {shift['end_time']}")
 
 # CLI for interacting with the scheduler
 def main():
@@ -303,7 +486,8 @@ def main():
         print("2. View Shifts")
         print("3. Report No-Show")
         print("4. Holidays Calendar")
-        print("5. Exit")
+        print("5. Manage Employee Availability")
+        print("6. Exit")
         choice = input("Enter your choice: ")
 
         if choice == "1":
@@ -372,8 +556,11 @@ def main():
 
         elif choice == "4":
             fetch_holidays()
-
+            
         elif choice == "5":
+            manage_employee_availability()
+
+        elif choice == "6":
             print("Exiting the scheduler. Goodbye!")
             return
             
